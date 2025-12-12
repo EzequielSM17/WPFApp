@@ -6,7 +6,7 @@ namespace ViewModels
 {
     public class PaginationViewModel : ViewModelBase
     {
-        // Propiedades de estado
+
         private int _currentPage = 1;
         public int CurrentPage
         {
@@ -36,12 +36,11 @@ namespace ViewModels
 
         public ObservableCollection<int> PageNumbers { get; set; } = new();
 
-        // Comandos
+
         public ICommand PrevPageCommand { get; }
         public ICommand NextPageCommand { get; }
         public ICommand LoadPageCommand { get; }
 
-        // Evento para notificar al padre sobre el cambio de página
         public event EventHandler<int>? PageChangeRequested;
 
         public PaginationViewModel()
@@ -69,22 +68,32 @@ namespace ViewModels
         private void UpdatePageNumbers()
         {
             PageNumbers.Clear();
+
             if (TotalPages <= 0) return;
+            var pagesSet = new HashSet<int>();
 
-            var pages = new List<int>();
-            pages.Add(CurrentPage);
+            pagesSet.Add(1);
 
-            for (int i = 1; i <= 4; i++)
+            int start = CurrentPage - 2;
+            int end = CurrentPage + 2;
+
+            for (int i = start; i <= end; i++)
             {
-                var p = CurrentPage + i;
-                if (p <= TotalPages) pages.Add(p);
+                if (i > 1 && i < TotalPages)
+                {
+                    pagesSet.Add(i);
+                }
             }
 
-            if (TotalPages > CurrentPage && !pages.Contains(TotalPages))
-                pages.Add(TotalPages);
+            if (TotalPages > 1)
+            {
+                pagesSet.Add(TotalPages);
+            }
 
-            foreach (var p in pages.Distinct().OrderBy(x => x))
+            foreach (var p in pagesSet.OrderBy(x => x))
+            {
                 PageNumbers.Add(p);
+            }
         }
     }
 }

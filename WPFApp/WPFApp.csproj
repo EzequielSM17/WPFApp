@@ -9,24 +9,36 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\app_icon.png" />
     <None Remove="Assets\Icons\database.png" />
+    <None Remove="Assets\Icons\loading.png" />
     <None Remove="Assets\Icons\memory.png" />
     <None Remove="Assets\Icons\mic_off.png" />
     <None Remove="Assets\Icons\mic_on.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\app_icon.png" />
     <Resource Include="Assets\Icons\database.png" />
+    <Resource Include="Assets\Icons\loading.png" />
     <Resource Include="Assets\Icons\memory.png" />
     <Resource Include="Assets\Icons\mic_off.png" />
     <Resource Include="Assets\Icons\mic_on.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="System.Speech" Version="10.0.0" />
+    <PackageReference Include="Whisper.net" Version="1.9.0" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.9.0" />
   </ItemGroup>
 	<ItemGroup>
 		<Reference Include="System.Speech" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="ggml-base.bin">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

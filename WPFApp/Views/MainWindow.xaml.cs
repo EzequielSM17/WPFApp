@@ -1,6 +1,7 @@
 ﻿using DTOs;
 using Service;
 using System.Windows;
+using System.Windows.Input;
 using ViewModels; 
 
 namespace WPFApp
@@ -25,7 +26,20 @@ namespace WPFApp
 
          
             ViewModel.GameSelectedCommand = new RelayCommand(HandleGameSelected);
+            this.CommandBindings.Add(new CommandBinding(SystemCommands.CloseWindowCommand, OnCloseWindow));
+            this.CommandBindings.Add(new CommandBinding(SystemCommands.MaximizeWindowCommand, OnMaximizeWindow, OnCanResizeWindow));
+            this.CommandBindings.Add(new CommandBinding(SystemCommands.MinimizeWindowCommand, OnMinimizeWindow, OnCanMinimizeWindow));
+            this.CommandBindings.Add(new CommandBinding(SystemCommands.RestoreWindowCommand, OnRestoreWindow, OnCanResizeWindow));
         }
+
+        // --- MÉTODOS AUXILIARES PARA QUE FUNCIONE LA BARRA ---
+        private void OnCloseWindow(object target, ExecutedRoutedEventArgs e) => SystemCommands.CloseWindow(this);
+        private void OnMaximizeWindow(object target, ExecutedRoutedEventArgs e) => SystemCommands.MaximizeWindow(this);
+        private void OnMinimizeWindow(object target, ExecutedRoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
+        private void OnRestoreWindow(object target, ExecutedRoutedEventArgs e) => SystemCommands.RestoreWindow(this);
+
+        private void OnCanResizeWindow(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = this.ResizeMode == ResizeMode.CanResize || this.ResizeMode == ResizeMode.CanResizeWithGrip;
+        private void OnCanMinimizeWindow(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = this.ResizeMode != ResizeMode.NoResize;
 
 
         private async void Sidebar_RequestNewGameDialog(object? sender, EventArgs e)
@@ -63,7 +77,7 @@ namespace WPFApp
             {
                 var editWindow = new GameEditWindow(game, isNew: false);
                 editWindow.Owner = this;
-
+                var result = editWindow.ShowDialog();
                 // Opcional: refrescar lista tras edición
                 await ViewModel.LoadGamesAsync(ViewModel.PaginationVM.CurrentPage);
             }

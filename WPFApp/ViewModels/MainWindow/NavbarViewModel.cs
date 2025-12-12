@@ -39,7 +39,12 @@ namespace ViewModels
             set => SetProperty(ref _micIcon, value);
         }
 
-        // Color de fondo del botón para feedback visual
+        private bool _isProcessing;
+        public bool IsProcessing
+        {
+            get => _isProcessing;
+            set => SetProperty(ref _isProcessing, value);
+        }
         private string _micBackground = "White";
         public string MicBackground
         {
@@ -49,7 +54,6 @@ namespace ViewModels
 
         private bool _isListening;
 
-        // --- Comandos y Eventos ---
 
         public ICommand TogglePersistenceCommand { get; }
         public ICommand ToggleVoiceCommand { get; }
@@ -62,25 +66,16 @@ namespace ViewModels
             _persistenceApi = new PersistenceApiClient();
             _agentApi = new AgentApiClient();
             _speechService = new SpeechService();
+            _speechService.TextRecognized += OnVoiceTextRecognized;
 
-            // Inicializamos el servicio de voz
-            try
-            {
-                
-                _speechService.TextRecognized += OnVoiceTextRecognized;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("No se pudo iniciar el servicio de voz: " + ex.Message);
-            }
-
+            _speechService.ListeningStopped += OnListeningStopped;
+            
             TogglePersistenceCommand = new AsyncRelayCommand(TogglePersistenceAsync);
             ToggleVoiceCommand = new RelayCommand(ToggleVoice);
 
             _ = LoadPersistenceIconAsync();
         }
 
-        // --- Lógica de Voz ---
 
         private void ToggleVoice(object? parameter)
         {
@@ -89,9 +84,6 @@ namespace ViewModels
             if (_isListening)
             {
                 _speechService.StopListening();
-                _isListening = false;
-                MicIcon = "/Assets/Icons/mic_off.png";
-                MicBackground = "White";
             }
             else
             {
@@ -99,34 +91,67 @@ namespace ViewModels
                 {
                     _speechService.StartListening();
                     _isListening = true;
-                    MicIcon = "/Assets/Icons/mic_on.png"; // Asegúrate de tener este icono
-                    MicBackground = "#FFCCCC"; // Rojo claro para indicar grabación
+                    MicIcon = "/Assets/Icons/mic_on.png";
+                    MicBackground = "#FFCCCC";
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error al activar micrófono: " + ex.Message);
+                    MessageBox.Show("Error micrófono: " + ex.Message);
                 }
             }
+        }
+        private void OnListeningStopped()
+        {
+            
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _isListening = false;
+                MicIcon = "/Assets/Icons/mic_off.png";
+                MicBackground = "White";
+                
+            });
         }
 
         private async void OnVoiceTextRecognized(string text)
         {
-            // Detenemos la escucha para procesar (UX: "Walkie-talkie" style)
-            // Opcional: puedes dejarlo escuchando si prefieres comandos continuos
-            Application.Current.Dispatcher.Invoke(() => ToggleVoice(null));
+            // A. Detenemos escucha
+            _speechService.StopListening();
 
-            
+            // B. ACTIVAMOS MODO CARGANDO
+            IsProcessing = true;
+            MicIcon = "/Assets/Icons/loading.png"; // Pon aquí tu icono de carga
+            MicBackground = "#FFD700"; // Opcional: Color Amarillo/Naranja mientras piensa
 
-            // Llamada al Agente MCP
-            var response = await _agentApi.SendVoiceCommandAsync(text);
-
-            if (response != null)
+            try
             {
-                await HandleAgentResponse(response);
+                // C. Llamada al Agente (Aquí es donde tarda)
+                var response = await _agentApi.SendVoiceCommandAsync(text);
+
+                if (response != null)
+                {
+                    await HandleAgentResponse(response);
+                }
+                else
+                {
+                    MessageBox.Show("El agente no respondió correctamente.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("El agente no respondió correctamente.");
+                MessageBox.Show("Error de conexión: " + ex.Message);
+            }
+            finally
+            {
+                // D. DESACTIVAMOS MODO CARGANDO (Siempre, aunque falle)
+                IsProcessing = false;
+
+                // Restauramos estado original
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _isListening = false;
+                    MicIcon = "/Assets/Icons/mic_off.png";
+                    MicBackground = "White";
+                });
             }
         }
 
@@ -137,30 +162,19 @@ namespace ViewModels
                 case "list_games":
                     try
                     {
-                        // 2. MAGIA DE DESERIALIZACIÓN
-                        // El Result viene como un JsonElement (objeto genérico).
-                        // Tenemos que convertirlo a List<GameDTOWithId>.
 
                         if (response.Result is JsonElement element)
                         {
                             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-                            // A veces el resultado es directo una lista, a veces un objeto paginado.
-                            // Asumiremos que el Agente devuelve una lista de items o intentamos mapearlo.
-
-                            // Opción A: El agente devolvió directamente la lista [ {..}, {..} ]
                             var gamesList = JsonSerializer.Deserialize<PagedDTO<GameDTOWithId>>(element.GetRawText(), options);
 
                             if (gamesList?.Items != null)
                             {
-                                // 3. LANZAR EL EVENTO CON LOS DATOS
                                 GamesReceived?.Invoke(this, new GamesReceivedEventArgs(gamesList));
-                                
                             }
                         }
                         else
                         {
-                            // Si por alguna razón ya vino deserializado (raro en este flujo)
                             if (response.Result is  PagedDTO<GameDTOWithId> list)
                             {
                                 GamesReceived?.Invoke(this, new GamesReceivedEventArgs(list));
@@ -169,9 +183,7 @@ namespace ViewModels
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error procesando datos del agente: " + ex.Message);
-                        // Fallback: Si falla la conversión, pedimos recarga normal
-                        
+                        MessageBox.Show("Error procesando datos del agente: " + ex.Message); 
                     }
                     break;
 
@@ -179,7 +191,6 @@ namespace ViewModels
                 case "delete_game":
                 case "update_game":
                 case "change_persistence":
-                    // Aquí NO tenemos la lista nueva, así que pedimos recarga
                     await LoadPersistenceIconAsync();
                     PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
                     MessageBox.Show("Agente: Operación realizada.");
@@ -191,8 +202,8 @@ namespace ViewModels
             }
         }
 
-        // --- Lógica de Persistencia (Existente) ---
-        private async Task LoadPersistenceIconAsync()
+
+        private async Task<string> LoadPersistenceIconAsync()
         {
             // ... (Tu código existente) ...
             try
@@ -202,16 +213,28 @@ namespace ViewModels
                     PersistenceIcon = "/Assets/Icons/database.png";
                 else
                     PersistenceIcon = "/Assets/Icons/memory.png";
+
+                return mode;
             }
-            catch { }
+            catch { return ""; }
         }
 
         private async Task TogglePersistenceAsync(object? parameter)
         {
             try
             {
-                await LoadPersistenceIconAsync();
-                PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
+                
+                string mode=await LoadPersistenceIconAsync();
+                if(mode.Equals("Database", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _persistenceApi.SetPersistenceAsync("memory");
+                }
+                else
+                {
+                    await _persistenceApi.SetPersistenceAsync("database");
+                }
+
+                    PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
             }
             catch { }
         }

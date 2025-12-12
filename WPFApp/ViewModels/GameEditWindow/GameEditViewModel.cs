@@ -1,23 +1,26 @@
 ﻿using Api;
 using DTOs;
+using System.Threading.Tasks;
+using System.Windows; // Necesario para MessageBox
 using System.Windows.Input;
 using ViewModels;
 
-namespace WPFApp.ViewModels
+
+namespace ViewModels
 {
     public class GameEditViewModel : ViewModelBase
     {
         private readonly GamesApiClient _api;
         private readonly bool _isNew;
-        private readonly Action<bool?> _closeWindowAction; // Delegado para cerrar la ventana
+        private readonly Action<bool?> _closeWindowAction;
 
-        // Objeto que se está editando en la pantalla
         public GameDTOWithId EditableGame { get; private set; }
 
-        // Título de la ventana (Dinámico)
         public string WindowTitle => _isNew ? "Crear nuevo juego" : $"Editar juego #{EditableGame.Id}";
 
-        // Mensaje de error (Feedback visual)
+        // Propiedad para ocultar el botón de eliminar si estamos CREANDO
+        public bool IsEditMode => !_isNew;
+
         private string _errorMessage = string.Empty;
         public string ErrorMessage
         {
@@ -27,17 +30,14 @@ namespace WPFApp.ViewModels
 
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand DeleteCommand { get; } // <--- NUEVO COMANDO
 
-        // Constructor
         public GameEditViewModel(GameDTOWithId game, bool isNew, Action<bool?> closeWindowAction)
         {
             _api = new GamesApiClient();
             _isNew = isNew;
             _closeWindowAction = closeWindowAction;
 
-            // IMPORTANTE: CLONAR EL OBJETO
-            // No editamos 'game' directamente para poder cancelar los cambios.
-            // Creamos una copia nueva en EditableGame.
             EditableGame = new GameDTOWithId
             {
                 Id = game.Id,
@@ -52,44 +52,69 @@ namespace WPFApp.ViewModels
             };
 
             SaveCommand = new AsyncRelayCommand(SaveAsync);
-            CancelCommand = new RelayCommand(_ => _closeWindowAction(false)); // Cierra con false
+            CancelCommand = new RelayCommand(_ => _closeWindowAction(false));
+
+            // Inicializamos el comando de borrar
+            DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         }
 
         private async Task SaveAsync(object? parameter)
         {
             ErrorMessage = string.Empty;
-
             try
             {
                 bool success = false;
-
                 if (_isNew)
                 {
-                    // Lógica de Crear
                     var created = await _api.CreateGameAsync(EditableGame);
                     success = created != null;
                 }
                 else
                 {
-                    // Lógica de Actualizar
                     success = await _api.UpdateGameAsync(EditableGame.Id, EditableGame);
                 }
 
-                if (success)
-                {
-                    // Si todo sale bien, ejecutamos la acción de cerrar enviando 'true'
-                    _closeWindowAction(true);
-                }
-                else
-                {
-                    ErrorMessage = _isNew
-                        ? "No se pudo crear el juego."
-                        : "No se pudo actualizar el juego.";
-                }
+                if (success) _closeWindowAction(true);
+                else ErrorMessage = _isNew ? "No se pudo crear." : "No se pudo actualizar.";
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Error al guardar: {ex.Message}";
+            }
+        }
+
+        // --- NUEVA LÓGICA DE ELIMINAR ---
+        private async Task DeleteAsync(object? parameter)
+        {
+            // 1. Confirmación de seguridad
+            var result = MessageBox.Show(
+                $"¿Estás seguro de que quieres eliminar '{EditableGame.Title}'?",
+                "Confirmar eliminación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            ErrorMessage = string.Empty;
+
+            try
+            {
+                // 2. Llamada a la API (Asumiendo que existe DeleteGameAsync)
+                bool success = await _api.DeleteGameAsync(EditableGame.Id);
+
+                if (success)
+                {
+                    // Cerramos devolviendo true para que la lista principal se recargue
+                    _closeWindowAction(true);
+                }
+                else
+                {
+                    ErrorMessage = "No se pudo eliminar el juego.";
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error al eliminar: {ex.Message}";
             }
         }
     }

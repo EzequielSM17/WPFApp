@@ -1,6 +1,7 @@
 ﻿using Api;
 using DTOs;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Utils;
@@ -71,16 +72,23 @@ namespace ViewModels
         
             NavbarVM.GamesReceived += (sender, e) =>
             {
-
-                Games.Clear();
-
-                foreach (var game in e.Games.Items)
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Games.Add(game);
-                }
-
-                PaginationVM.CurrentPage = e.Games.Page;
-                PaginationVM.TotalPages = e.Games.TotalPages; 
+                    Games.Clear();
+                    if (e.Games.Items != null)
+                    {
+                        foreach (var game in e.Games.Items)
+                        {
+                            Games.Add(game);
+                        }
+                    }
+                    PaginationVM.CurrentPage = e.Games.Page;
+                    PaginationVM.TotalPages = e.Games.TotalPages;
+                    FilterTitle = e.Games.FilterTitle;
+                    FilterCategory = e.Games.FilterCategory;
+                    FilterFromDate = e.Games.FilterFromDate;
+                    FilterToDate = e.Games.FilterToDate;
+                });
             };
             // Coordinación de la Navbar
             NavbarVM.PersistenceModeChanged += async (s, e) =>

@@ -3,36 +3,74 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:WPFApp"
              xmlns:utils="clr-namespace:Utils"
-             Width="440" Height="220">
+             Width="400" Height="220">
     <UserControl.Resources>
         <utils:CentsToCurrencyConverter x:Key="CentsToCurrencyConverter"/>
     </UserControl.Resources>
 
-    <Border CornerRadius="10"
+    <Border x:Name="CardBorder"
+            CornerRadius="8"
             BorderThickness="1"
-            BorderBrush="#DDDDDD"
-            Background="#F8F8F8"
+            BorderBrush="{DynamicResource BorderBrush}"
+            Background="{DynamicResource SurfaceBrush}"
             SnapsToDevicePixels="True"
-            Padding="0"
             Margin="5">
-        <Grid>
-            <!-- Imagen a pantalla completa -->
-            <Image Source="{Binding UrlImagen}"
-                   Stretch="UniformToFill"
-                   Opacity="0.95"
-                   ClipToBounds="True"/>
 
-            <!-- Franja inferior con el precio -->
-            <Border Background="#CC000000"
-                    Height="30"
-                    VerticalAlignment="Bottom">
-                <TextBlock Text="{Binding Amount, Converter={StaticResource CentsToCurrencyConverter}}"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontWeight="Bold"
-                           FontSize="14"/>
+        <Border.Style>
+            <Style TargetType="Border">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                        <Setter Property="Effect">
+                            <Setter.Value>
+                                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.5"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+
+        <Grid>
+            <Border CornerRadius="8" ClipToBounds="True">
+                <Image Source="{Binding UrlImagen}"
+                       Stretch="UniformToFill"/>
             </Border>
+
+            <Border VerticalAlignment="Bottom" Height="60" CornerRadius="0,0,8,8">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00000000" Offset="0"/>
+                        <GradientStop Color="#E6121212" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <Grid VerticalAlignment="Bottom" Margin="15,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Title}"
+                           Foreground="White"
+                           FontWeight="SemiBold"
+                           FontSize="14"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"/>
+
+                <Border Grid.Column="1"
+                        Background="{DynamicResource BackgroundBrush}"
+                        CornerRadius="4"
+                        Padding="8,4">
+                    <TextBlock Text="{Binding Amount, Converter={StaticResource CentsToCurrencyConverter}}"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               FontWeight="Bold"
+                               FontSize="14"/>
+                </Border>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>
