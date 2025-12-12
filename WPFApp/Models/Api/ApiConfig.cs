@@ -7,5 +7,6 @@
         public string GamesEndpoint { get; set; } = "";
         public string AuthLoginEndpoint { get; set; } = "";
         public string AuthRegisterEndpoint { get; set; } = "";
+        public string AgentUrl { get; set; } = "";
     }
 }

@@ -18,7 +18,18 @@
                    VerticalAlignment="Center"
                    HorizontalAlignment="Right"
                    DockPanel.Dock="Right"/>
-                
+                <Button Width="40"
+                    Height="40"
+                    Margin="10,0"
+                    DockPanel.Dock="Right"
+                    BorderThickness="0"
+                    Background="{Binding MicBackground}" 
+                    ToolTip="Control por voz (Click para hablar)"
+                    Command="{Binding ToggleVoiceCommand}">
+                    <Image Source="{Binding MicIcon}"
+                       Width="24"
+                       Height="24"/>
+                </Button>
                 <Button Width="40"
                         
                 Background="LightGray"

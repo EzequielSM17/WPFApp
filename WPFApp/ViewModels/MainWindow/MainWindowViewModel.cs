@@ -1,6 +1,7 @@
 ﻿using Api;
 using DTOs;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Utils;
 
@@ -16,6 +17,7 @@ namespace ViewModels
         public NavbarViewModel NavbarVM { get; }
         public SidebarViewModel SidebarVM { get; }
         public PaginationViewModel PaginationVM { get; }
+        // Coordinación de la Navbar
 
         // Propiedades de la vista principal
         private ObservableCollection<GameDTOWithId> _games = new();
@@ -54,7 +56,7 @@ namespace ViewModels
             set => SetProperty(ref _filterToDate, value);
         }
 
-        // --- 2. COMANDOS DE FILTRO ---
+        
         public ICommand SearchCommand { get; }
         public ICommand ClearFiltersCommand { get; }
 
@@ -62,13 +64,24 @@ namespace ViewModels
         {
             _gamesApi = new GamesApiClient();
 
-            // 1. Instanciar ViewModels Hijos
             NavbarVM = new NavbarViewModel();
             SidebarVM = new SidebarViewModel();
             PaginationVM = new PaginationViewModel();
 
-            // 2. Suscribirse a los eventos de los hijos para coordinar la lógica
+        
+            NavbarVM.GamesReceived += (sender, e) =>
+            {
 
+                Games.Clear();
+
+                foreach (var game in e.Games.Items)
+                {
+                    Games.Add(game);
+                }
+
+                PaginationVM.CurrentPage = e.Games.Page;
+                PaginationVM.TotalPages = e.Games.TotalPages; 
+            };
             // Coordinación de la Navbar
             NavbarVM.PersistenceModeChanged += async (s, e) =>
             {

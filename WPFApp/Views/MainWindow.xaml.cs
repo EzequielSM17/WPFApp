@@ -1,4 +1,5 @@
-﻿using DTOs;             
+﻿using DTOs;
+using Service;
 using System.Windows;
 using ViewModels; 
 
@@ -13,30 +14,23 @@ namespace WPFApp
         {
             // 1. Instanciar el ViewModel
             var viewModel = new MainWindowViewModel();
+            var navigationService = new NavigationService(this);
             DataContext = viewModel;
 
             InitializeComponent();
 
-            // 2. Suscribirse a las peticiones de navegación/diálogo de los ViewModels hijos
-
-            // Peticiones de la Sidebar
+            
             ViewModel.SidebarVM.RequestNewGameDialog += Sidebar_RequestNewGameDialog;
-            ViewModel.SidebarVM.RequestLogout += Sidebar_RequestLogout;
+            ViewModel.SidebarVM.RequestLogout += navigationService.NavigateToLogout;
 
-            // Petición de GameCard
+         
             ViewModel.GameSelectedCommand = new RelayCommand(HandleGameSelected);
         }
 
-        // --- Manejo de la lógica de ventanas y navegación (Responsabilidad del Code-Behind) ---
 
-        /// <summary>
-        /// Maneja la solicitud de crear un nuevo juego (emitida por SidebarViewModel).
-        /// </summary>
         private async void Sidebar_RequestNewGameDialog(object? sender, EventArgs e)
         {
-            // Nota: Aquí se asume que GameEditWindow existe y puede recibir un DTO para crear.
-
-            // 1. Preparar el DTO por defecto (La mejor práctica sería que el VM padre lo hiciera)
+           
             var newGame = new GameDTOWithId
             {
                 Id = 0,
@@ -54,31 +48,15 @@ namespace WPFApp
             editWindow.Owner = this;
             var result = editWindow.ShowDialog();
 
-            // 2. Si el diálogo fue exitoso, notificar al VM para recargar.
+           
             if (result == true)
             {
-                // La recarga se debe disparar en el VM
+               
                 await ViewModel.LoadGamesAsync(ViewModel.PaginationVM.CurrentPage);
             }
         }
 
-        /// <summary>
-        /// Maneja la solicitud de cerrar sesión (emitida por SidebarViewModel).
-        /// </summary>
-        private void Sidebar_RequestLogout(object? sender, EventArgs e)
-        {
-            // 1. La limpieza de Session ya la hace el ViewModel.
 
-            // 2. Manejo de la navegación (Cerrar esta y abrir LoginWindow).
-            var login = new LoginWindow(); // Asumiendo que esta clase existe
-            login.Show();
-
-            this.Close();
-        }
-
-        /// <summary>
-        /// Maneja la selección de una tarjeta de juego (desde GameSelectedCommand en MainWindowViewModel).
-        /// </summary>
         private async void HandleGameSelected(object? parameter)
         {
             if (parameter is GameDTOWithId game)
@@ -91,13 +69,6 @@ namespace WPFApp
             }
         }
 
-        // El antiguo método MouseLeftButtonUp del XAML debe eliminarse o manejarse con Command, 
-        // tal como se hizo con el nuevo 'GameSelectedCommand'.
-
-        /* private void GameCard_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            // ESTE MÉTODO DEBE ELIMINARSE. Su lógica se ha movido a HandleGameSelected.
-        }
-        */
+        
     }
 }

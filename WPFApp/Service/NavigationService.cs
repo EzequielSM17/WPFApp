@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using DTOs;
 using Service.Interfaces;
+using System.Windows;
+using ViewModels;
 using WPFApp;
 
 namespace Service
@@ -33,5 +35,16 @@ namespace Service
             main.Show();
             _owner.Close();
         }
+
+        public void NavigateToLogout(object? sender, EventArgs e)
+        {
+
+            var login = new LoginWindow();
+            login.Show();
+            _owner.Close();
+        }
+
+        
+       
     }
 }

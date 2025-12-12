@@ -20,6 +20,7 @@ namespace Api
             Config = new ApiConfig
             {
                 BaseUrl = env.GetValueOrDefault("API_BASE_URL", "http://localhost:5001"),
+                AgentUrl = env.GetValueOrDefault("API_BASE_URL", "http://localhost:5223"),
                 PersistenceEndpoint = env.GetValueOrDefault("API_PERSISTENCE", "/api/persistence"),
                 GamesEndpoint = env.GetValueOrDefault("API_GAMES", "/api/games"),
                 AuthLoginEndpoint = env.GetValueOrDefault("API_AUTH_LOGIN", "/api/auth/login"),

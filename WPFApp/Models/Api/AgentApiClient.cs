@@ -9,32 +9,20 @@ namespace Api
 {
     public class AgentApiClient:ApiClientBase
     {
-        private readonly HttpClient _httpClient;
-        private const string BaseUrl = "http://localhost:5223"; // Tu servidor MCP
-
-        public AgentApiClient()
-        {
-            _httpClient = new HttpClient();
-        }
+        public AgentApiClient() : base() { }
 
         public async Task<AgentResponse?> SendVoiceCommandAsync(string text)
         {
             try
             {
-                var requestUrl = $"{BaseUrl}/agent";
+                var requestUrl = $"{Config.AgentUrl}/agent";
                 var requestDto = new AgentRequest { Text = text };
 
                 var json = JsonSerializer.Serialize(requestDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
+           
 
-                // Importante: Añadir el JWT para que el MCP pueda llamar a set_jwt
-                if (!string.IsNullOrEmpty(Session.JwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", Session.JwtToken);
-                }
-
-                var response = await _httpClient.PostAsync(requestUrl, content);
+                var response = await Http.PostAsync(requestUrl, content);
 
                 if (response.IsSuccessStatusCode)
                 {
