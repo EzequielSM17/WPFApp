@@ -31,24 +31,30 @@
 
             <StackPanel Margin="0,0,15,0">
                 <TextBlock Text="DESDE" 
-                           Foreground="{StaticResource TextMutedBrush}" 
-                           FontWeight="Bold" 
-                           FontSize="11" 
-                           Margin="0,0,0,5"/>
+               Foreground="{StaticResource TextMutedBrush}" 
+               FontWeight="Bold" 
+               FontSize="11" 
+               Margin="0,0,0,5"/>
+
                 <DatePicker Width="130" Height="35" 
-                            SelectedDate="{Binding FilterFromDate}"
-                            VerticalContentAlignment="Center"/>
+                SelectedDate="{Binding FilterFromDate}"
+                Style="{StaticResource DarkDatePickerStyle}"
+                ToolTip="Seleccionar fecha de inicio"
+                VerticalContentAlignment="Center"/>
             </StackPanel>
 
             <StackPanel Margin="0,0,15,0">
                 <TextBlock Text="HASTA" 
-                           Foreground="{StaticResource TextMutedBrush}" 
-                           FontWeight="Bold" 
-                           FontSize="11" 
-                           Margin="0,0,0,5"/>
+               Foreground="{StaticResource TextMutedBrush}" 
+               FontWeight="Bold" 
+               FontSize="11" 
+               Margin="0,0,0,5"/>
+
                 <DatePicker Width="130" Height="35" 
-                            SelectedDate="{Binding FilterToDate}"
-                            VerticalContentAlignment="Center"/>
+                SelectedDate="{Binding FilterToDate}"
+                Style="{StaticResource DarkDatePickerStyle}"
+                ToolTip="Seleccionar fecha de fin"
+                VerticalContentAlignment="Center"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">

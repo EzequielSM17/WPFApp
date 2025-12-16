@@ -1,11 +1,11 @@
 ﻿using Api;
 using DTOs;
 using Events;
+using Service.Interfaces;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows; // Para MessageBox y Dispatcher
 using System.Windows.Input;
-using VoiceGamesClient.Voice; // Tu namespace del SpeechService
+using VoiceGamesClient.Voice;
+
 
 namespace ViewModels
 {
@@ -14,8 +14,8 @@ namespace ViewModels
         private readonly PersistenceApiClient _persistenceApi;
         private readonly AgentApiClient _agentApi;
         private readonly SpeechService _speechService;
-
-        // --- Propiedades ---
+        private readonly INavigationService _navigationService;
+        private readonly IDispatcherService _dispatcherService;
 
         private string _userEmail = string.Empty;
         public string UserEmail
@@ -31,7 +31,6 @@ namespace ViewModels
             set => SetProperty(ref _persistenceIcon, value);
         }
 
-        // Icono del micrófono (cambia si escucha o no)
         private string _micIcon = "/Assets/Icons/mic_off.png";
         public string MicIcon
         {
@@ -45,6 +44,7 @@ namespace ViewModels
             get => _isProcessing;
             set => SetProperty(ref _isProcessing, value);
         }
+
         private string _micBackground = "White";
         public string MicBackground
         {
@@ -54,28 +54,28 @@ namespace ViewModels
 
         private bool _isListening;
 
-
         public ICommand TogglePersistenceCommand { get; }
         public ICommand ToggleVoiceCommand { get; }
 
-        
         public event EventHandler? PersistenceModeChanged;
         public event EventHandler<GamesReceivedEventArgs>? GamesReceived;
-        public NavbarViewModel()
+
+        public NavbarViewModel(INavigationService navigationService, IDispatcherService dispatcherService)
         {
+            _navigationService = navigationService;
+            _dispatcherService = dispatcherService;
             _persistenceApi = new PersistenceApiClient();
             _agentApi = new AgentApiClient();
             _speechService = new SpeechService();
-            _speechService.TextRecognized += OnVoiceTextRecognized;
 
+            _speechService.TextRecognized += OnVoiceTextRecognized;
             _speechService.ListeningStopped += OnListeningStopped;
-            
+
             TogglePersistenceCommand = new AsyncRelayCommand(TogglePersistenceAsync);
             ToggleVoiceCommand = new RelayCommand(ToggleVoice);
 
             _ = LoadPersistenceIconAsync();
         }
-
 
         private void ToggleVoice(object? parameter)
         {
@@ -96,35 +96,31 @@ namespace ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error micrófono: " + ex.Message);
+                    _navigationService.ShowError("Error micrófono: " + ex.Message);
                 }
             }
         }
+
         private void OnListeningStopped()
         {
-            
-            Application.Current.Dispatcher.Invoke(() =>
+            _dispatcherService.Invoke(() =>
             {
                 _isListening = false;
                 MicIcon = "/Assets/Icons/mic_off.png";
                 MicBackground = "White";
-                
             });
         }
 
         private async void OnVoiceTextRecognized(string text)
         {
-            // A. Detenemos escucha
             _speechService.StopListening();
 
-            // B. ACTIVAMOS MODO CARGANDO
             IsProcessing = true;
-            MicIcon = "/Assets/Icons/loading.png"; // Pon aquí tu icono de carga
-            MicBackground = "#FFD700"; // Opcional: Color Amarillo/Naranja mientras piensa
+            MicIcon = "/Assets/Icons/loading.png";
+            MicBackground = "#FFD700";
 
             try
             {
-                // C. Llamada al Agente (Aquí es donde tarda)
                 var response = await _agentApi.SendVoiceCommandAsync(text);
 
                 if (response != null)
@@ -133,20 +129,18 @@ namespace ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("El agente no respondió correctamente.");
+                    _navigationService.ShowError("El agente no respondió correctamente.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error de conexión: " + ex.Message);
+                _navigationService.ShowError("Error de conexión: " + ex.Message);
             }
             finally
             {
-                // D. DESACTIVAMOS MODO CARGANDO (Siempre, aunque falle)
                 IsProcessing = false;
 
-                // Restauramos estado original
-                Application.Current.Dispatcher.Invoke(() =>
+                _dispatcherService.Invoke(() =>
                 {
                     _isListening = false;
                     MicIcon = "/Assets/Icons/mic_off.png";
@@ -162,7 +156,6 @@ namespace ViewModels
                 case "list_games":
                     try
                     {
-
                         if (response.Result is JsonElement element)
                         {
                             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -175,7 +168,7 @@ namespace ViewModels
                         }
                         else
                         {
-                            if (response.Result is  PagedDTO<GameDTOWithId> list)
+                            if (response.Result is PagedDTO<GameDTOWithId> list)
                             {
                                 GamesReceived?.Invoke(this, new GamesReceivedEventArgs(list));
                             }
@@ -183,7 +176,7 @@ namespace ViewModels
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error procesando datos del agente: " + ex.Message); 
+                        _navigationService.ShowError("Error procesando datos del agente: " + ex.Message);
                     }
                     break;
 
@@ -193,19 +186,17 @@ namespace ViewModels
                 case "change_persistence":
                     await LoadPersistenceIconAsync();
                     PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
-                    MessageBox.Show("Agente: Operación realizada.");
+                    _navigationService.ShowMessage("Agente: Operación realizada.", "Éxito");
                     break;
 
                 default:
-                    MessageBox.Show($"Agente ejecutó: {response.Tool}");
+                    _navigationService.ShowMessage($"Agente ejecutó: {response.Tool}");
                     break;
             }
         }
 
-
         private async Task<string> LoadPersistenceIconAsync()
         {
-            // ... (Tu código existente) ...
             try
             {
                 var mode = await _persistenceApi.GetPersistenceModeAsync();
@@ -223,9 +214,8 @@ namespace ViewModels
         {
             try
             {
-                
-                string mode=await LoadPersistenceIconAsync();
-                if(mode.Equals("Database", StringComparison.OrdinalIgnoreCase))
+                string mode = await _persistenceApi.GetPersistenceModeAsync();
+                if (mode.Equals("Database", StringComparison.OrdinalIgnoreCase))
                 {
                     await _persistenceApi.SetPersistenceAsync("memory");
                 }
@@ -233,10 +223,13 @@ namespace ViewModels
                 {
                     await _persistenceApi.SetPersistenceAsync("database");
                 }
-
-                    PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
+                await LoadPersistenceIconAsync();
+                PersistenceModeChanged?.Invoke(this, EventArgs.Empty);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _navigationService.ShowError("Error al cambiar persistencia: " + ex.Message);
+            }
         }
 
         public void Dispose()

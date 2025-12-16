@@ -78,9 +78,6 @@ namespace WPFApp.ViewModels
 
                 if (ok)
                 {
-                    // Éxito: Navegar al Login
-                    // Opcional: Podrías usar un servicio de diálogos para mostrar el MessageBox
-                    // System.Windows.MessageBox.Show("Usuario registrado..."); 
 
                     _navigationService.NavigateToLogin();
                 }

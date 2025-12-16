@@ -71,7 +71,18 @@ namespace ViewModels
                 }
                 else
                 {
-                    success = await _api.UpdateGameAsync(EditableGame.Id, EditableGame);
+                    var dto = new GameDTO
+                    {
+                        Title = EditableGame.Title,
+                        Publisher = EditableGame.Publisher,
+                        Developer = EditableGame.Developer,
+                        Category = EditableGame.Category,
+                        Amount = EditableGame.Amount,
+                        IsActive = EditableGame.IsActive,
+                        UrlImagen = EditableGame.UrlImagen,
+                        ReleaseDate = EditableGame.ReleaseDate.ToUniversalTime()
+                    };
+                    success = await _api.UpdateGameAsync(EditableGame.Id, dto);
                 }
 
                 if (success) _closeWindowAction(true);

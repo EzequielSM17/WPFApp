@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:WPFApp"
         xmlns:dto="clr-namespace:DTOs"
         xmlns:controls="clr-namespace:WPFApp.Views.Controls"
-        Title="Videogames" Height="800" Width="1400"
+        Title="Videogames" WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource CustomWindowStyle}"
         Icon="/Assets/app_icon.png"

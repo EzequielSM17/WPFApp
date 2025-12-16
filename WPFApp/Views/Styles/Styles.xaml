@@ -155,7 +155,7 @@
         <Setter Property="Height" Value="40"/>
         <Setter Property="Margin" Value="10,0,0,0"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Background" Value="White"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Template">
@@ -349,6 +349,113 @@
                             <AdornerDecorator Grid.Row="1">
                                 <ContentPresenter/>
                             </AdornerDecorator>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="#1E1E1E" 
+                        BorderBrush="#FF8C00"
+                        BorderThickness="1" 
+                        CornerRadius="5"
+                        Padding="10,5">
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="2" BlurRadius="5" Opacity="0.4"/>
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="Center" 
+                                      VerticalAlignment="Center"
+                                      TextElement.Foreground="White"
+                                      TextElement.FontWeight="Normal"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CustomCalendarStyle" TargetType="Calendar">
+        <Setter Property="Background" Value="#1E1E1E"/>
+        <Setter Property="BorderBrush" Value="#333333"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Calendar">
+                    <StackPanel x:Name="PART_Root" HorizontalAlignment="Center">
+                        <CalendarItem x:Name="PART_CalendarItem"
+                                  Background="{TemplateBinding Background}"
+                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                  BorderThickness="{TemplateBinding BorderThickness}"
+                                  Style="{TemplateBinding CalendarItemStyle}"/>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DarkDatePickerStyle" TargetType="DatePicker">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="#1E1E1E"/>
+        <Setter Property="BorderBrush" Value="#333333"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CalendarStyle" Value="{StaticResource CustomCalendarStyle}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DatePicker">
+                    <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="5">
+                        <Grid x:Name="PART_Root" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="PART_Button" 
+                                Grid.Column="1"
+                                Width="30"
+                                Foreground="#FF8C00" 
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Margin="0,0,2,0"
+                                VerticalAlignment="Center">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Grid Background="Transparent">
+                                            <Path Data="M0,0 L14,0 L14,12 L0,12 Z M2,3 L12,3 M2,3 L2,12 L12,12 L12,3" 
+                                              Stroke="{TemplateBinding Foreground}" 
+                                              StrokeThickness="1.5" 
+                                              Fill="Transparent"
+                                              VerticalAlignment="Center" 
+                                              HorizontalAlignment="Center"
+                                              Width="14" Height="12"/>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <DatePickerTextBox x:Name="PART_TextBox"
+                                           Grid.Column="0"
+                                           Foreground="White"
+                                           Background="Transparent"
+                                           SelectionBrush="#FF8C00"
+                                           VerticalContentAlignment="Center"
+                                           HorizontalAlignment="Stretch"
+                                           Margin="5,0,0,0"
+                                           Focusable="{TemplateBinding Focusable}"/>
+
+                            <Popup x:Name="PART_Popup" 
+                               AllowsTransparency="True" 
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=PART_Root}" 
+                               StaysOpen="False"/>
                         </Grid>
                     </Border>
                 </ControlTemplate>

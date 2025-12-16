@@ -14,7 +14,7 @@ namespace WPFApp
         public MainWindow()
         {
             // 1. Instanciar el ViewModel
-            var viewModel = new MainWindowViewModel();
+            var viewModel = new MainWindowViewModel(new NavigationService(this), new DispacherService());
             var navigationService = new NavigationService(this);
             DataContext = viewModel;
 

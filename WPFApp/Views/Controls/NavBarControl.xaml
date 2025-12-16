@@ -54,9 +54,22 @@
                        Style="{StaticResource SpinningImageStyle}"/>
                 </Button>
 
-                <Button Style="{StaticResource NavIconButtonStyle}"
+                <Button
                         ToolTip="Cambiar persistencia"
-                        Command="{Binding TogglePersistenceCommand}">
+                        Command="{Binding TogglePersistenceCommand}" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource NavIconButtonStyle}">
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding IsProcessing}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                    <Setter Property="Opacity" Value="0.5"/>
+                                    <Setter Property="Cursor" Value="Arrow"/>
+                                </DataTrigger>
+
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
                     <Image Source="{Binding PersistenceIcon}" Width="22" Height="22"/>
                 </Button>
 
